@@ -34,6 +34,7 @@ class NovelDownloader:
         """WebDAV文件上传"""
         try:
             if not all([self.dav_host, self.dav_username, self.dav_password]):
+                print(self.dav_host, self.dav_username, self.dav_password)
                 print("WebDAV配置不完整,请检查环境变量")
                 return False
                 
