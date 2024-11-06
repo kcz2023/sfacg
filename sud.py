@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 from functools import lru_cache
-from webdav4.client import Client
+from webdav4-client import Client
 import os
 
 class NovelDownloader:
