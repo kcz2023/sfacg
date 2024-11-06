@@ -54,8 +54,9 @@ def login(username, password):
     data = json.dumps(
         {"password": password, "shuMeiId": "", "username": username})
     url = "https://api.sfacg.com/sessions"
+    if username == "" or password == "":
+        return "", ""
     resp = requests.post(url, headers=headers, data=data)
-    print(resp.json())
     if (resp.json()["status"]["httpCode"] == 200):
         cookie = requests.utils.dict_from_cookiejar(resp.cookies)
         return cookie[".SFCommunity"], cookie["session_APP"]

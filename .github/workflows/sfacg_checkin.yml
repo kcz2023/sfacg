@@ -27,4 +27,3 @@ jobs:
           session_APP: ${{ secrets.session_APP }}
           username: ${{ secrets.username }}
           password: ${{ secrets.password }}
-          dingTalkToken: ${{ secrets.dingTalkToken }}
