@@ -26,9 +26,9 @@ class NovelDownloader:
             'cookie': cookie
         }
         # 从环境变量获取WebDAV配置
-        self.dav_host = os.environ.get('WEBDAV_HOST')
-        self.dav_username = os.environ.get('WEBDAV_USERNAME') 
-        self.dav_password = os.environ.get('WEBDAV_PASSWORD')
+        self.dav_host = os.environ.get('webdav_host')
+        self.dav_username = os.environ.get('webdav_username') 
+        self.dav_password = os.environ.get('webdav_password')
         
     def dav_upload(self, local_path, remote_path):
         """WebDAV文件上传"""
@@ -199,8 +199,8 @@ class NovelDownloader:
         os.makedirs("config", exist_ok=True)
         
         # 生成文件名
-        file_path = os.path.join(os.getcwd(), f"{novel_name}.txt")
-        config_path = os.path.join(os.getcwd(), f"{novel_name}.json")
+        file_path = os.path.join(os.getcwd(), "novels", f"{novel_name}.txt")
+        config_path = os.path.join(os.getcwd(), "config", f"{novel_name}.json")
         # 检查配置文件是否存在
         downloaded_chapters = []
         if os.path.exists(config_path):
