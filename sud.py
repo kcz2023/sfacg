@@ -199,8 +199,8 @@ class NovelDownloader:
         os.makedirs("config", exist_ok=True)
         
         # 生成文件名
-        file_path = os.path.join(os.getcwd(), "novels", f"{novel_name}.txt")
-        config_path = os.path.join(os.getcwd(), "config", f"{novel_name}.json")
+        file_path = os.path.join(os.getcwd(), f"{novel_name}.txt")
+        config_path = os.path.join(os.getcwd(), f"{novel_name}.json")
         # 检查配置文件是否存在
         downloaded_chapters = []
         if os.path.exists(config_path):
