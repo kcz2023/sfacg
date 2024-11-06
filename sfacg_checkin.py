@@ -164,26 +164,22 @@ def checkin(cookie):
             sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
             headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
             url = f"https://api.sfacg.com/user/advertisements?deviceToken={device_token.lower()}&page=0&size=20"
-            print(requests.get(url, headers=headers).json())
+            requests.get(url, headers=headers)   
             
             timestamp = int(time.time() * 1000)
             sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
             headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
             url = f"https://api.sfacg.com/user/tasks/21/advertisement?aid=43&deviceToken={device_token.lower()}"
-            resp = requests.put(url, headers=headers,
-                                data=json.dumps({"num": 1})).json()
-            print(resp)
+            requests.put(url, headers=headers, data=json.dumps({"num": 1}))
+            
             timestamp = int(time.time() * 1000)
             sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
             headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
             resp = requests.put("https://api.sfacg.com/user/tasks/21",
                                 headers=headers, data='').json()
-            print(resp)
             if(resp['status']['httpCode'] == 200):
                 couponNum += resp['data']['couponNum']
         time.sleep(5)
-
-
 
 if __name__ == "__main__":
     username = os.environ.get('username')
@@ -192,8 +188,8 @@ if __name__ == "__main__":
     if (not check(f".SFCommunity={SFCommunity}; session_APP={session_APP}")):
         print("登录失败")
         sys.exit()
-
+    checkin(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
     downloader = NovelDownloader(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
-
-    novelName, chapters = downloader.buy_novel_chapters()
-    downloader.save_content(novelName, chapters)
+    if downloader.get_balance() > 100:
+        novelName, chapters = downloader.buy_novel_chapters()
+        downloader.save_content(novelName, chapters)

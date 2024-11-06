@@ -40,8 +40,10 @@ class NovelDownloader:
                 
             client = Client(self.dav_host, auth=(self.dav_username, self.dav_password))
             local = os.path.abspath(local_path)
-            remote = f"/{remote_path.lstrip('/')}"
-            
+            if client.exists(remote):
+                client.remove(remote)
+                print(f"删除已存在文件: {remote}")
+            remote = f"/{remote_path.lstrip('/')}"    
             client.upload_file(local, remote)
             print(f"上传成功: {local} -> {remote}")
             return True
@@ -139,7 +141,7 @@ class NovelDownloader:
             
         novel_chapters = []
         flag = True
-        i = 3
+        i = 0
         while i < len(subscriptions) and flag:
             sub = subscriptions[i]
             chapters = self.get_chapters(sub["novelId"])
