@@ -53,9 +53,9 @@ def login(username, password):
     headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
     data = json.dumps(
         {"password": password, "shuMeiId": "", "username": username})
+    print(data)
     url = "https://api.sfacg.com/sessions"
-    if username == "" or password == "":
-        return "", ""
+    
     resp = requests.post(url, headers=headers, data=data)
     if (resp.json()["status"]["httpCode"] == 200):
         cookie = requests.utils.dict_from_cookiejar(resp.cookies)
