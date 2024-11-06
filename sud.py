@@ -139,7 +139,7 @@ class NovelDownloader:
             
         novel_chapters = []
         flag = True
-        i = 1
+        i = 2
         while i < len(subscriptions) and flag:
             sub = subscriptions[i]
             chapters = self.get_chapters(sub["novelId"])
