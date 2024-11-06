@@ -23,8 +23,6 @@ jobs:
       - name: Run the script
         run: python sfacg_checkin.py
         env:
-          SFCommunity: ${{ secrets.SFCommunity }}
-          session_APP: ${{ secrets.session_APP }}
           username: ${{ secrets.username }}
           password: ${{ secrets.password }}
           webdav_host: ${{ secrets.webdav_host }}
