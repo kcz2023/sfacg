@@ -6,7 +6,6 @@ import hashlib
 import json
 import os
 from functools import lru_cache
-from dav import WebDAVUploader
 from webdav4.client import Client
 import os
 
