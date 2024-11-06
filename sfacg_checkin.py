@@ -186,7 +186,7 @@ def checkin(cookie):
 
 if __name__ == "__main__":
     username = os.environ.get('USERNAME')
-    password = os.environ.get('PASSWORD')
+    password = os.environ.get('PASSWD')
     SFCommunity, session_APP = login(username, password)
     if (not check(f".SFCommunity={SFCommunity}; session_APP={session_APP}")):
         print("登录失败")
