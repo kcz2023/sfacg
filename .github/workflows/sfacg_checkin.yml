@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: '3.x'
       - name: Install dependencies
-        run: pip install requests
+        run: pip install -r requirements.txt
       - name: Run the script
         run: python sfacg_checkin.py
         env:
