@@ -53,7 +53,6 @@ def login(username, password):
     headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
     data = json.dumps(
         {"password": password, "shuMeiId": "", "username": username})
-    print(data)
     url = "https://api.sfacg.com/sessions"
     
     resp = requests.post(url, headers=headers, data=data)
@@ -187,8 +186,8 @@ def checkin(cookie):
 
 
 if __name__ == "__main__":
-    username = os.environ.get('USERNAME')
-    password = os.environ.get('PASSWORD')
+    username = os.environ.get('username')
+    password = os.environ.get('password')
     SFCommunity, session_APP = login(username, password)
     if (not check(f".SFCommunity={SFCommunity}; session_APP={session_APP}")):
         print("登录失败")
