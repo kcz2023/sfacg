@@ -190,6 +190,6 @@ if __name__ == "__main__":
         sys.exit()
     checkin(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
     downloader = NovelDownloader(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
-    if downloader.get_balance() > 100:
+    if downloader.get_balance()['coupons'] > 20:
         novelName, chapters = downloader.buy_novel_chapters()
         downloader.save_content(novelName, chapters)
