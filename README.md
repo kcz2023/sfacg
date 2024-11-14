@@ -11,7 +11,7 @@
 - 📺 自动广告任务
 - 🔔 自动订阅章节
 - ♻️ 每月自动保活
-- 🚧 自动下载已订阅书籍(开发中)
+- 📚 自动下载已订阅书籍并上传至坚果云
 
 ## 📝 使用说明
 
@@ -28,11 +28,13 @@
 #### 🔒 添加账户凭据 
 1. 进入 `设置 > Secrets > Actions > New repository secret`
 2. 添加以下信息:
-   - `USERNAME`: 登录账户的手机号码
-   - `PASSWORD`: 登录账户的密码
+   - `USERNAME`: 多账号用`,`隔开,每个账号用`|`隔开,格式为`手机号|密码`
+   - `WEBDAV_HOST`: 坚果云WebDAV地址
+   - `WEBDAV_USERNAME`: 坚果云WebDAV账号
+   - `WEBDAV_PASSWORD`: 坚果云WebDAV密码
 
 ### 3️⃣ 自动订阅
-订阅顺序从[订阅记录]的第一部书开始
+订阅顺序从[书架]的第一部书开始
 
 ### 4️⃣ 配置执行时间（可选）
 修改`.github/workflows/health-report.yml`中的计划任务时间:

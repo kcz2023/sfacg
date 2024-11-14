@@ -63,7 +63,6 @@ class NovelDownloader:
         
         resp = requests.get("https://api.sfacg.com/user/money", headers=self.headers).json()
         balance = {}
-        print(resp)
         if resp["status"]["httpCode"] == 200:
             balance = {
                 "fireMoney": resp["data"]["fireMoneyRemain"],
@@ -77,24 +76,33 @@ class NovelDownloader:
             print("获取余额失败!")        
         return balance
 
-    def get_subscriptions(self) -> list:
-        """获取订阅记录"""
+    def get_pocket(self) -> list:
+        """获取书架记录"""
         self.headers['sfsecurity'] = self.update_security_headers()
         
-        resp = requests.get("https://api.sfacg.com/user/consumeitems?type=novel&page=0&size=12", headers=self.headers).json()
+        resp = requests.get("https://api.sfacg.com/user/Pockets?expand=novels%2Calbums%2Ccomics%2Cdiscount%2CdiscountExpireDate", headers=self.headers).json()
         
+        subscriptions = []
         if resp["status"]["httpCode"] == 200:
-            print("\n=== 获取订阅记录 ===")
-            return [{
-                "consumeChapterNum": sub["consumeChapterNum"],
-                "novelId": sub["novel"]["novelId"],
-                "novelName": sub["novel"]["novelName"],
-                "authorName": sub["novel"]["authorName"], 
-                "lastUpdateTime": sub["novel"]["lastUpdateTime"]
-            } for sub in resp["data"]]
-        
-        print("获取订阅记录失败!")
-        return []
+            # 遍历所有小说
+            for pocket in resp["data"]:
+                if "expand" not in pocket or "novels" not in pocket["expand"]:
+                    continue
+                    
+                # 添加所有作品
+                for sub in pocket["expand"]["novels"]:
+                    try:
+                        subscriptions.append({
+                            "authorId": sub["authorId"],
+                            "novelId": sub["novelId"],
+                            "novelName": sub["novelName"],
+                            "authorName": sub["authorName"],
+                        })
+                    except KeyError as e:
+                        print(f"解析订阅数据出错: {e}")
+                        continue
+                    
+        return subscriptions
 
     def get_chapters(self, novel_id: int) -> list:
         """获取小说章节列表"""
@@ -117,13 +125,18 @@ class NovelDownloader:
         print("获取章节列表失败!")
         return []
 
-    def buy_chapter(self, chapter_id: int) -> bool:
+    def buy_chapter(self, novel_id: int, chapter_id: int) -> bool:
         """购买小说章节"""
         self.headers['sfsecurity'] = self.update_security_headers()
         
-        url = f"https://api.sfacg.com/Chaps/{chapter_id}?expand=content,needFireMoney,originNeedFireMoney,tsukkomi,chatlines,isbranch,isContentEncrypted,authorTalk&autoOrder=true"
-        resp = requests.get(url, headers=self.headers).json()
-        
+        url = f"https://api.sfacg.com/novels/{novel_id}/orderedchaps"
+        resp = requests.post(url, json={
+            "orderType": "readOrder",
+            "orderAll": False,
+            "autoOrder": False,
+            "chapIds": [chapter_id]
+        }, headers=self.headers).json()
+        print(resp)
         if resp["status"]["httpCode"] == 200:
             print(f"章节《{resp['data']['title']}》购买成功!")
             return True
@@ -132,36 +145,24 @@ class NovelDownloader:
             return False
 
     def buy_novel_chapters(self) -> dict:
-        """获取所有订阅小说的章节信息"""
-        print("\n=== 获取所有订阅小说章节 ===")
+        """获取所有书架小说的章节信息并购买未购买的章节"""
+        print("\n=== 获取所有书架小说章节并购买未购买章节 ===")
         
-        subscriptions = self.get_subscriptions()
-        if not subscriptions:
-            return {}
-            
+        pocket = self.get_pocket()
+        if not pocket:
+            return {}        
         novel_chapters = []
-        flag = True
-        i = 0
-        while i < len(subscriptions) and flag:
-            sub = subscriptions[i]
+        for sub in pocket:
             chapters = self.get_chapters(sub["novelId"])
-            j = 0
-            while j < len(chapters) and flag:
-                chapter = chapters[j]
-                if chapter["isVip"] and chapter["needFireMoney"] > 0:
-                    if not self.buy_chapter(chapter["chapterId"]):
-                        print(f"小说《{sub['novelName']}》章节《{chapter['title']}》购买失败,终止获取章节")
-                        flag = False
-                        return sub["novelName"], novel_chapters
-                    else:
-                        print(f"小说《{sub['novelName']}》章节《{chapter['title']}》购买成功,消耗火币{chapter['needFireMoney']}")
-                
+            for chapter in chapters:
+                if chapter["needFireMoney"] > 0:
+                    if not self.buy_chapter(sub["novelId"], chapter["chapterId"]):
+                        return sub["novelName"], novel_chapters    
                 novel_chapters.append({
-                    "title": chapter["title"],
+                    "title": chapter["title"], 
                     "chapterId": chapter["chapterId"]
                 })
-                j += 1
-            i += 1
+                
         return sub["novelName"], novel_chapters
 
     def download_chapter(self, chapters: str):

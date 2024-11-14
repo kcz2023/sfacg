@@ -24,7 +24,6 @@ jobs:
         run: python sfacg_checkin.py
         env:
           username: ${{ secrets.username }}
-          password: ${{ secrets.password }}
           webdav_host: ${{ secrets.webdav_host }}
           webdav_username: ${{ secrets.webdav_username }}
           webdav_password: ${{ secrets.webdav_password }}

@@ -180,16 +180,43 @@ def checkin(cookie):
             if(resp['status']['httpCode'] == 200):
                 couponNum += resp['data']['couponNum']
         time.sleep(5)
+# def test(cookie):
+#     """测试接口调用
+    
+#     Args:
+#         cookie: 登录cookie
+#     """
+#     print("\n=== 开始测试接口 ===")
+    
+#     # 测试cookie有效性
+#     if not check(cookie):
+#         print("Cookie无效,请重新登录")
+#         return
+        
+#     # 实例化下载器
+#     downloader = NovelDownloader(cookie)
+    
+#     # 测试获取余额
+#     balance = downloader.get_balance()
+#     print(f"账户余额: {balance}")
+    
+#     # 下载小说
+#     novelName, chapters = downloader.buy_novel_chapters()
+#     downloader.save_content(novelName, chapters)
+                
+#     print("\n=== 接口测试完成 ===")
+
 
 if __name__ == "__main__":
-    username = os.environ.get('username')
-    password = os.environ.get('password')
-    SFCommunity, session_APP = login(username, password)
-    if (not check(f".SFCommunity={SFCommunity}; session_APP={session_APP}")):
-        print("登录失败")
-        sys.exit()
-    checkin(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
-    downloader = NovelDownloader(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
-    if downloader.get_balance()['coupons'] > 20:
-        novelName, chapters = downloader.buy_novel_chapters()
-        downloader.save_content(novelName, chapters)
+    users = os.environ.get('username').split(',')
+    for user in users:
+        username, password = user.split('|')
+        SFCommunity, session_APP = login(username, password)
+        if (not check(f".SFCommunity={SFCommunity}; session_APP={session_APP}")):
+            print(f"用户 {username} 登录失败")
+            continue
+        checkin(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
+        downloader = NovelDownloader(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
+        if downloader.get_balance()['coupons'] > 20:
+            novelName, chapters = downloader.buy_novel_chapters()
+            downloader.save_content(novelName, chapters)
