@@ -136,12 +136,9 @@ class NovelDownloader:
             "autoOrder": False,
             "chapIds": [chapter_id]
         }, headers=self.headers).json()
-        print(resp)
         if resp["status"]["httpCode"] == 200:
-            print(f"章节《{resp['data']['title']}》购买成功!")
             return True
         elif resp["status"]["httpCode"] == 403:
-            print(f"章节购买失败: {resp['status']['msg']}")
             return False
 
     def buy_novel_chapters(self) -> dict:
@@ -155,13 +152,20 @@ class NovelDownloader:
         for sub in pocket:
             chapters = self.get_chapters(sub["novelId"])
             for chapter in chapters:
+                title = chapter["title"]
                 if chapter["needFireMoney"] > 0:
-                    if not self.buy_chapter(sub["novelId"], chapter["chapterId"]):
-                        return sub["novelName"], novel_chapters    
-                novel_chapters.append({
-                    "title": chapter["title"], 
-                    "chapterId": chapter["chapterId"]
-                })
+                    success = self.buy_chapter(sub["novelId"], chapter["chapterId"])
+                    if not success:
+                        return sub["novelName"], novel_chapters
+                    novel_chapters.append({
+                        "title": title,
+                        "chapterId": chapter["chapterId"]
+                    })
+                else:
+                    novel_chapters.append({
+                        "title": chapter["title"], 
+                        "chapterId": chapter["chapterId"]
+                    })
                 
         return sub["novelName"], novel_chapters
 

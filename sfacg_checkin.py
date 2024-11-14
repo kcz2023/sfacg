@@ -213,10 +213,10 @@ if __name__ == "__main__":
         username, password = user.split('|')
         SFCommunity, session_APP = login(username, password)
         if (not check(f".SFCommunity={SFCommunity}; session_APP={session_APP}")):
-            print(f"用户 {username} 登录失败")
+            print(f"登录失败")
             continue
         checkin(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
         downloader = NovelDownloader(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
-        if downloader.get_balance()['coupons'] > 20:
+        if downloader.get_balance()['coupons'] > 13:
             novelName, chapters = downloader.buy_novel_chapters()
             downloader.save_content(novelName, chapters)
