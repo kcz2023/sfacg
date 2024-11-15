@@ -200,17 +200,15 @@ def test(cookie):
 
 
 if __name__ == "__main__":
-    users = os.environ.get('username').split(',')
-
-    
+    users = os.environ.get('username').split(',')  
     for user in users:
         username, password = user.split('|')
         SFCommunity, session_APP = login(username, password)
         if (not check(f".SFCommunity={SFCommunity}; session_APP={session_APP}")):
             print(f"登录失败")
             continue
-    
+        checkin(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
         downloader = NovelDownloader(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
         if downloader.get_balance()['coupons'] > 0:
-            novelName, chapters = downloader.buy_novel_chapters()
-            downloader.save_content(novelName, chapters)
+            jianjie, novelName, chapters = downloader.buy_novel_chapters()
+            downloader.save_content(jianjie, novelName, chapters)

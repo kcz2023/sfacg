@@ -103,6 +103,42 @@ class NovelDownloader:
                         continue
                     
         return subscriptions
+    
+    def get_novel_info(self, novel_id: int) -> dict:
+        """获取小说信息
+        
+        Args:
+            novel_id: 小说ID
+            
+        Returns:
+            包含小说信息的字典
+        """
+        self.headers['sfsecurity'] = self.update_security_headers()
+        
+        resp = requests.get(f"https://api.sfacg.com/novels/{novel_id}?expand=latestchapter,chapterCount,typeName,intro,fav,ticket,pointCount,tags,sysTags", headers=self.headers).json()
+        if resp["status"]["httpCode"] != 200:
+            print("获取小说信息失败!")
+            return {}
+            
+        try:
+            data = resp["data"]
+            novel_info = {
+                "authorName": data["authorName"],
+                "intro": data["expand"]["intro"],
+                "novelCover": data["novelCover"], 
+                "isFinish": data["isFinish"],
+                "lastUpdateTime": data["lastUpdateTime"],
+                "chapterCount": data["expand"]["chapterCount"],
+                "typeName": data["expand"]["typeName"],
+                "tags": [tag["tagName"] for tag in data["expand"]["sysTags"]],
+                "latestChapter": {
+                    "title": data["expand"]["latestChapter"]["title"]
+                }
+            }
+            return novel_info
+        except KeyError as e:
+            print(f"解析小说信息出错: {e}")
+            return {}
 
     def get_chapters(self, novel_id: int) -> list:
         """获取小说章节列表"""
@@ -146,17 +182,19 @@ class NovelDownloader:
         print("\n=== 获取所有书架小说章节并购买未购买章节 ===")
         
         pocket = self.get_pocket()
+      
         if not pocket:
             return {}        
         novel_chapters = []
         for sub in pocket:
+            jianjie = self.get_novel_info(sub["novelId"])
             chapters = self.get_chapters(sub["novelId"])
             for chapter in chapters:
                 title = chapter["title"]
                 if chapter["needFireMoney"] > 0:
                     success = self.buy_chapter(sub["novelId"], chapter["chapterId"])
                     if not success:
-                        return sub["novelName"], novel_chapters
+                        return jianjie, sub["novelName"], novel_chapters
                     novel_chapters.append({
                         "title": title,
                         "chapterId": chapter["chapterId"]
@@ -167,7 +205,7 @@ class NovelDownloader:
                         "chapterId": chapter["chapterId"]
                     })
                 
-        return sub["novelName"], novel_chapters
+        return jianjie, sub["novelName"], novel_chapters
 
     def download_chapter(self, chapters: str):
         content = ""
@@ -200,7 +238,7 @@ class NovelDownloader:
             print(f"{chapters} 下载失败，请检查是否未订阅该章节")
         return content
 
-    def save_content(self, novel_name: str, chapters: list) -> None:
+    def save_content(self, jianjie: dict, novel_name: str, chapters: list) -> None:
         """保存内容到本地文件并上传到WebDAV"""
         # 创建小说目录
         os.makedirs("novels", exist_ok=True)
@@ -213,8 +251,27 @@ class NovelDownloader:
             os.remove(file_path)
             
         try:
+            # 写入书籍信息
+            content = f"""
+==============================================
+                  书籍信息
+==============================================
+
+【书    名】 {novel_name}
+【作    者】 {jianjie.get('authorName', '未知')}
+【简    介】 {jianjie.get('intro', '暂无简介')}
+【封    面】 {jianjie.get('novelCover', '暂无封面')}
+【状    态】 {'已完结' if jianjie.get('isFinish') else '连载中'}
+【最后更新】 {jianjie.get('lastUpdateTime', '未知')}
+【章节数量】 {jianjie.get('chapterCount', 0)}
+【分    类】 {jianjie.get('typeName', '未分类')}
+【标    签】 {', '.join(jianjie.get('tags', []))}
+【最新章节】 {jianjie.get('latestChapter', {}).get('title', '暂无')}
+
+==============================================
+
+"""
             # 保存章节内容
-            content = ""
             for chapter in chapters:
                 content += self.download_chapter(chapter["chapterId"])
                 
