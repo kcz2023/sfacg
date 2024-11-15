@@ -202,49 +202,27 @@ class NovelDownloader:
 
     def save_content(self, novel_name: str, chapters: list) -> None:
         """保存内容到本地文件并上传到WebDAV"""
-        # 创建小说目录和配置目录
+        # 创建小说目录
         os.makedirs("novels", exist_ok=True)
-        os.makedirs("config", exist_ok=True)
         
         # 生成文件名
         file_path = os.path.join(os.getcwd(), "novels", f"{novel_name}.txt")
-        config_path = os.path.join(os.getcwd(), "config", f"{novel_name}.json")
-        # 检查配置文件是否存在
-        downloaded_chapters = []
-        if os.path.exists(config_path):
-            try:
-                with open(config_path, "r", encoding="utf-8") as f:
-                    downloaded_chapters = json.load(f)
-            except Exception as e:
-                print(f"× 读取配置失败: {str(e)}")
         
-        # 获取新增章节
-        new_chapters = []
-        for chapter in chapters:
-            if chapter not in downloaded_chapters:
-                new_chapters.append(chapter)
-        
-        if not new_chapters:
-            print(f"没有新增章节需要下载")
-            return
+        # 如果文件已存在则删除
+        if os.path.exists(file_path):
+            os.remove(file_path)
             
         try:
-            # 保存新增章节内容
+            # 保存章节内容
             content = ""
-            for chapter in new_chapters:
+            for chapter in chapters:
                 content += self.download_chapter(chapter["chapterId"])
                 
-            # 追加写入文件
-            mode = "a" if os.path.exists(file_path) else "w"
-            with open(file_path, mode, encoding="utf-8") as f:
+            # 写入文件
+            with open(file_path, "w", encoding="utf-8") as f:
                 f.write(content)
                 
-            # 更新配置文件
-            downloaded_chapters.extend(new_chapters)
-            with open(config_path, "w", encoding="utf-8") as f:
-                json.dump(downloaded_chapters, f, ensure_ascii=False, indent=2)
-                
-            print(f"\n✓ 新增{len(new_chapters)}个章节已保存到: {file_path}")
+            print(f"\n✓ {len(chapters)}个章节已保存到: {file_path}")
             
             # 上传到WebDAV
             try:
