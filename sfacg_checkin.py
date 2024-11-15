@@ -180,31 +180,23 @@ def checkin(cookie):
             if(resp['status']['httpCode'] == 200):
                 couponNum += resp['data']['couponNum']
         time.sleep(5)
-# def test(cookie):
-#     """测试接口调用
+def test(cookie):
+    print("\n=== 开始测试接口 ===")
     
-#     Args:
-#         cookie: 登录cookie
-#     """
-#     print("\n=== 开始测试接口 ===")
-    
-#     # 测试cookie有效性
-#     if not check(cookie):
-#         print("Cookie无效,请重新登录")
-#         return
+    if not check(cookie):
+        print("Cookie无效,请重新登录")
+        return
         
-#     # 实例化下载器
-#     downloader = NovelDownloader(cookie)
+    downloader = NovelDownloader(cookie)
     
-#     # 测试获取余额
-#     balance = downloader.get_balance()
-#     print(f"账户余额: {balance}")
+    balance = downloader.get_balance()
+    print(f"账户余额: {balance}")
     
-#     # 下载小说
-#     novelName, chapters = downloader.buy_novel_chapters()
-#     downloader.save_content(novelName, chapters)
-                
-#     print("\n=== 接口测试完成 ===")
+    novelName, chapters = downloader.buy_novel_chapters()
+    print(f"购买小说: {novelName}")
+    print(f"购买章节: {chapters}")
+    downloader.save_content(novelName, chapters)        
+    print("\n=== 接口测试完成 ===")
 
 
 if __name__ == "__main__":
@@ -217,6 +209,6 @@ if __name__ == "__main__":
             continue
         checkin(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
         downloader = NovelDownloader(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
-        if downloader.get_balance()['coupons'] > 13:
+        if downloader.get_balance()['coupons'] > 10:
             novelName, chapters = downloader.buy_novel_chapters()
             downloader.save_content(novelName, chapters)
