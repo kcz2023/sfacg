@@ -161,22 +161,6 @@ class NovelDownloader:
         print("获取章节列表失败!")
         return []
 
-    def buy_chapter(self, novel_id: int, chapter_id: int) -> bool:
-        """购买小说章节"""
-        self.headers['sfsecurity'] = self.update_security_headers()
-        
-        url = f"https://api.sfacg.com/novels/{novel_id}/orderedchaps"
-        resp = requests.post(url, json={
-            "orderType": "readOrder",
-            "orderAll": False,
-            "autoOrder": False,
-            "chapIds": [chapter_id]
-        }, headers=self.headers).json()
-        if resp["status"]["httpCode"] == 200:
-            return True
-        elif resp["status"]["httpCode"] == 403:
-            return False
-
     def buy_novel_chapters(self) -> dict:
         """获取所有书架小说的章节信息并购买未购买的章节"""
         print("\n=== 获取所有书架小说章节并购买未购买章节 ===")
@@ -192,16 +176,25 @@ class NovelDownloader:
             for chapter in chapters:
                 title = chapter["title"]
                 if chapter["needFireMoney"] > 0:
-                    success = self.buy_chapter(sub["novelId"], chapter["chapterId"])
-                    if not success:
-                        return jianjie, sub["novelName"], novel_chapters
+                    # 购买章节
+                    self.headers['sfsecurity'] = self.update_security_headers()
+                    url = f"https://api.sfacg.com/novels/{sub['novelId']}/orderedchaps"
+                    resp = requests.post(url, json={
+                        "orderType": "readOrder", 
+                        "orderAll": False,
+                        "autoOrder": False,
+                        "chapIds": [chapter["chapterId"]]
+                    }, headers=self.headers).json()
+                    
+                    if resp["status"]["httpCode"] != 200:
+                        return jianjie, sub["novelName"], novel_chapters             
                     novel_chapters.append({
                         "title": title,
                         "chapterId": chapter["chapterId"]
                     })
                 else:
                     novel_chapters.append({
-                        "title": chapter["title"], 
+                        "title": chapter["title"],
                         "chapterId": chapter["chapterId"]
                     })
                 
