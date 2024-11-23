@@ -68,10 +68,6 @@ class NovelDownloader:
                 "fireMoney": resp["data"]["fireMoneyRemain"],
                 "coupons": resp["data"]["couponsRemain"]
             }
-            print(f"\n=== 账户余额 ===")
-            print(f"火卷余额: {balance['fireMoney']}")
-            print(f"代券余额: {balance['coupons']}")
-            print("-" * 30)
         else:
             print("获取余额失败!")        
         return balance
@@ -174,30 +170,27 @@ class NovelDownloader:
             jianjie = self.get_novel_info(sub["novelId"])
             chapters = self.get_chapters(sub["novelId"])
             for chapter in chapters:
-                title = chapter["title"]
-                if chapter["needFireMoney"] > 0:
+                sol = chapter["needFireMoney"]
+                hav = self.get_balance()['coupons']
+                if sol > 0 and hav >= sol:
                     # 购买章节
                     self.headers['sfsecurity'] = self.update_security_headers()
                     url = f"https://api.sfacg.com/novels/{sub['novelId']}/orderedchaps"
-                    resp = requests.post(url, json={
-                        "orderType": "readOrder", 
-                        "orderAll": False,
-                        "autoOrder": False,
+                    requests.post(url, json={
                         "chapIds": [chapter["chapterId"]]
                     }, headers=self.headers).json()
-                    
-                    if resp["status"]["httpCode"] != 200:
-                        return jianjie, sub["novelName"], novel_chapters             
-                    novel_chapters.append({
-                        "title": title,
-                        "chapterId": chapter["chapterId"]
-                    })
-                else:
                     novel_chapters.append({
                         "title": chapter["title"],
                         "chapterId": chapter["chapterId"]
                     })
-                
+                else:
+                    if sol > 0:
+                        print(f"章节{chapter['title']}需要{sol}火卷,当前代券不足")
+                        break
+                    novel_chapters.append({
+                        "title": chapter["title"],
+                        "chapterId": chapter["chapterId"]
+                    })
         return jianjie, sub["novelName"], novel_chapters
 
     def download_chapter(self, chapters: str):

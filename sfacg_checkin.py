@@ -209,6 +209,5 @@ if __name__ == "__main__":
             continue
         checkin(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
         downloader = NovelDownloader(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
-        if downloader.get_balance()['coupons'] > 0:
-            jianjie, novelName, chapters = downloader.buy_novel_chapters()
-            downloader.save_content(jianjie, novelName, chapters)
+        jianjie, novelName, chapters = downloader.buy_novel_chapters()
+        downloader.save_content(jianjie, novelName, chapters)
