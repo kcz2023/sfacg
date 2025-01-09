@@ -28,7 +28,7 @@
 #### 🔒 添加账户凭据 
 1. 进入 `设置 > Secrets > Actions > New repository secret`
 2. 添加以下信息:
-   - `USERNAME`: 多账号用`,`隔开,每个账号用`|`隔开,格式为`手机号|密码`
+   - `USERNAME`: 多账号用`,`隔开,格式为`手机号|密码,手机号|密码`
    - `WEBDAV_HOST`: 坚果云WebDAV地址
    - `WEBDAV_USERNAME`: 坚果云WebDAV账号
    - `WEBDAV_PASSWORD`: 坚果云WebDAV密码
