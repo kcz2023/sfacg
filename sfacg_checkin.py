@@ -1,15 +1,9 @@
 import requests
 import time
 import uuid
-import sys
 import hashlib
 import json
 import os
-from sud import NovelDownloader
-
-
-
-
 
 nonce = "C7DC5CAD-31CF-4431-8635-B415B75BF4F3"
 device_token = str(uuid.uuid4())
@@ -28,31 +22,26 @@ device_token = device_token.upper()
 def md5_hex(input, case):
     m = hashlib.md5()
     m.update(input.encode())
-
     if case == 'Upper':
         return m.hexdigest().upper()
     else:
         return m.hexdigest()
-
 
 def check(cookie):
     headers['cookie'] = cookie
     resp = requests.get('https://api.sfacg.com/user?', headers=headers).json()
     if (resp["status"]["httpCode"] == 200):
         nick_Name = resp['data']['nickName']
-        # print(f"{nick_Name} cookie未失效")
+        print(f"用户 {nick_Name} 登录成功")
         return True
     else:
         return False
 
-
 def login(username, password):
-    
     timestamp = int(time.time() * 1000)
     sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
     headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
-    data = json.dumps(
-        {"password": password, "shuMeiId": "", "username": username})
+    data = json.dumps({"password": password, "shuMeiId": "", "username": username})
     url = "https://api.sfacg.com/sessions"
     
     resp = requests.post(url, headers=headers, data=data)
@@ -62,152 +51,71 @@ def login(username, password):
     else:
         return "", ""
 
-
-exp = 0
-couponNum = 0
-fireCoin = 0
-
-
 def checkin(cookie):
-    global exp
-    global couponNum
-    global fireCoin
-    
-    timestamp = int(time.time() * 1000)
-    sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
-    headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
     headers["cookie"] = cookie
     Date = time.strftime('%Y-%m-%d', time.localtime(time.time()))
     signDate = json.dumps({"signDate": Date})
-    ReadData = json.dumps(
-        {"seconds": 3605, "readingDate": Date, "entityType": 2})
-    ListenData = json.dumps(
-        {"seconds": 3605, "readingDate": Date, "entityType": 3})
-    for _ in range(3):
-            
-        timestamp = int(time.time() * 1000)
-        sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
-        headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
-        resp = requests.put(
-            "https://api.sfacg.com/user/newSignInfo", headers=headers, data=signDate).json()
-        # print(resp)
-        if('status' in resp and resp['status']['httpCode'] == 200):
-            couponNum += resp['data'][0]['num']
-            
-        timestamp = int(time.time() * 1000)
-        sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
-        headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
-        requests.put('https://api.sfacg.com/user/readingtime',
-                     headers=headers, data=ListenData)
-            
-        timestamp = int(time.time() * 1000)
-        sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
-        headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
-        requests.put('https://api.sfacg.com/user/readingtime',
-                     headers=headers, data=ReadData)
-        
-        timestamp = int(time.time() * 1000)
-        sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
-        headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
-        requests.post('https://api.sfacg.com/user/tasks/5',
-                      headers=headers, data=ListenData)
-        
-        timestamp = int(time.time() * 1000)
-        sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
-        headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
-        requests.post('https://api.sfacg.com/user/tasks/17',
-                      headers=headers, data=ListenData)
-        for _ in range(3):
-
-            timestamp = int(time.time() * 1000)
-            sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
-            headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
-            requests.put('https://api.sfacg.com/user/readingtime',
-                         headers=headers, data=ListenData)
-            time.sleep(0.5)
-            
-            timestamp = int(time.time() * 1000)
-            sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
-            headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
-            resp = requests.put(
-                'https://api.sfacg.com/user/tasks/5', headers=headers, data=ListenData).json()
-            # print(resp)
-            if(resp['status']['httpCode'] == 200):
-                fireCoin += resp['data']['fireCoin']
-                exp += resp['data']['exp']
-            
-            timestamp = int(time.time() * 1000)
-            sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
-            headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
-            resp = requests.put(
-                'https://api.sfacg.com/user/tasks/17', headers=headers, data='').json()
-            # print(resp)
-            if(resp['status']['httpCode'] == 200):
-                fireCoin += resp['data']['fireCoin']
-                exp += resp['data']['exp']
-                
-        timestamp = int(time.time() * 1000)
-        sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
-        headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
-        url = f"https://api.sfacg.com/user/tasks?taskCategory=5&package=com.sfacg&deviceToken={device_token.lower()}&page=0&size=10"
-        print(requests.get(url, headers=headers).json())
-        
-        timestamp = int(time.time() * 1000)
-        sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
-        headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
-        url = "https://api.sfacg.com/user/tasks/21"
-        print(requests.post(url, headers=headers).json())  
-        
-        for _ in range(5):
-            
-            timestamp = int(time.time() * 1000)
-            sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
-            headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
-            url = f"https://api.sfacg.com/user/advertisements?deviceToken={device_token.lower()}&page=0&size=20"
-            requests.get(url, headers=headers)   
-            
-            timestamp = int(time.time() * 1000)
-            sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
-            headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
-            url = f"https://api.sfacg.com/user/tasks/21/advertisement?aid=43&deviceToken={device_token.lower()}"
-            requests.put(url, headers=headers, data=json.dumps({"num": 1}))
-            
-            timestamp = int(time.time() * 1000)
-            sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
-            headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
-            resp = requests.put("https://api.sfacg.com/user/tasks/21",
-                                headers=headers, data='').json()
-            if(resp['status']['httpCode'] == 200):
-                couponNum += resp['data']['couponNum']
-        time.sleep(5)
-def test(cookie):
-    print("\n=== 开始测试接口 ===")
+    total_coupons = 0
     
-    if not check(cookie):
-        print("Cookie无效,请重新登录")
-        return
+    print("开始执行签到和广告任务...")
+    
+    # 1. 每日签到
+    timestamp = int(time.time() * 1000)
+    sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
+    headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
+    resp = requests.put("https://api.sfacg.com/user/newSignInfo", headers=headers, data=signDate).json()
+    
+    if 'status' in resp and resp['status']['httpCode'] == 200:
+        coupon_num = resp['data'][0]['num']
+        total_coupons += coupon_num
+        print(f"✅ 签到成功，获得代券: {coupon_num}")
+    else:
+        print("❌ 签到失败")
+    
+    # 2. 广告任务
+    print("开始广告任务...")
+    for i in range(5):
+        # 获取广告
+        timestamp = int(time.time() * 1000)
+        sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
+        headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
+        url = f"https://api.sfacg.com/user/advertisements?deviceToken={device_token.lower()}&page=0&size=20"
+        requests.get(url, headers=headers)
         
-    downloader = NovelDownloader(cookie)
+        # 上报广告观看
+        timestamp = int(time.time() * 1000)
+        sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
+        headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
+        url = f"https://api.sfacg.com/user/tasks/21/advertisement?aid=43&deviceToken={device_token.lower()}"
+        requests.put(url, headers=headers, data=json.dumps({"num": 1}))
+        
+        # 完成任务
+        timestamp = int(time.time() * 1000)
+        sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
+        headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
+        resp = requests.put("https://api.sfacg.com/user/tasks/21", headers=headers, data='').json()
+        
+        if resp['status']['httpCode'] == 200:
+            coupon_num = resp['data']['couponNum']
+            total_coupons += coupon_num
+            print(f"✅ 广告任务 {i+1}/5 完成，获得代券: {coupon_num}")
+        else:
+            print(f"❌ 广告任务 {i+1}/5 失败")
+        
+        time.sleep(2)  # 等待2秒
     
-    balance = downloader.get_balance()
-    print(f"账户余额: {balance}")
-    
-    novelName, chapters = downloader.buy_novel_chapters()
-    print(f"购买小说: {novelName}")
-    print(f"购买章节: {chapters}")
-    downloader.save_content(novelName, chapters)        
-    print("\n=== 接口测试完成 ===")
-
+    print(f"🎉 任务完成，总计获得代券: {total_coupons}")
 
 if __name__ == "__main__":
     users = os.environ.get('username').split(',')  
     for user in users:
         username, password = user.split('|')
+        print(f"正在处理账号: {username}")
         SFCommunity, session_APP = login(username, password)
-        if (not check(f".SFCommunity={SFCommunity}; session_APP={session_APP}")):
-            print(f"登录失败")
-            continue
-        checkin(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
-        downloader = NovelDownloader(f".SFCommunity={SFCommunity}; session_APP={session_APP}")
-        jianjie, novelName, chapters = downloader.buy_novel_chapters()
-        downloader.save_content(jianjie, novelName, chapters)
+        cookie = f".SFCommunity={SFCommunity}; session_APP={session_APP}"
+        
+        if check(cookie):
+            checkin(cookie)
+            print(f"账号 {username} 处理完成\n")
+        else:
+            print(f"账号 {username} 登录失败\n")
