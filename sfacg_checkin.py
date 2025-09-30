@@ -6,18 +6,7 @@ import json
 import os
 
 nonce = "C7DC5CAD-31CF-4431-8635-B415B75BF4F3"
-device_token = str(uuid.uuid4())
 SALT = "FN_Q29XHVmfV3mYX"
-headers = {
-    'Host': 'api.sfacg.com',
-    'accept-charset': 'UTF-8',
-    'authorization': 'Basic YW5kcm9pZHVzZXI6MWEjJDUxLXl0Njk7KkFjdkBxeHE=',
-    'accept': 'application/vnd.sfacg.api+json;version=1',
-    'user-agent': f'boluobao/5.0.36(android;32)/H5/{device_token}/H5',
-    'accept-encoding': 'gzip',
-    'Content-Type': 'application/json; charset=UTF-8'
-}
-device_token = device_token.upper()
 
 def md5_hex(input, case):
     m = hashlib.md5()
@@ -27,17 +16,29 @@ def md5_hex(input, case):
     else:
         return m.hexdigest()
 
-def check(cookie):
+def generate_headers(device_token):
+    headers = {
+        'Host': 'api.sfacg.com',
+        'accept-charset': 'UTF-8',
+        'authorization': 'Basic YW5kcm9pZHVzZXI6MWEjJDUxLXl0Njk7KkFjdkBxeHE=',
+        'accept': 'application/vnd.sfacg.api+json;version=1',
+        'user-agent': f'boluobao/5.0.36(android;32)/H5/{device_token}/H5',
+        'accept-encoding': 'gzip',
+        'Content-Type': 'application/json; charset=UTF-8'
+    }
+    return headers
+
+def check(cookie, headers):
     headers['cookie'] = cookie
     resp = requests.get('https://api.sfacg.com/user?', headers=headers).json()
     if (resp["status"]["httpCode"] == 200):
         nick_Name = resp['data']['nickName']
         print(f"用户 {nick_Name} 登录成功")
-        return True
+        return True, nick_Name
     else:
-        return False
+        return False, ""
 
-def login(username, password):
+def login(username, password, device_token, headers):
     timestamp = int(time.time() * 1000)
     sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
     headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
@@ -51,7 +52,28 @@ def login(username, password):
     else:
         return "", ""
 
-def checkin(cookie):
+def logout(cookie, device_token, headers):
+    """退出登录"""
+    try:
+        timestamp = int(time.time() * 1000)
+        sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
+        headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
+        headers['cookie'] = cookie
+        
+        logout_url = "https://api.sfacg.com/sessions"
+        resp = requests.delete(logout_url, headers=headers, timeout=10)
+        
+        if resp.status_code == 200:
+            print("✅ 已安全退出账号")
+            return True
+        else:
+            print("⚠️ 退出账号失败，但会话已失效")
+            return False
+    except Exception as e:
+        print(f"⚠️ 退出账号时发生错误: {str(e)}")
+        return False
+
+def checkin(cookie, device_token, headers):
     headers["cookie"] = cookie
     Date = time.strftime('%Y-%m-%d', time.localtime(time.time()))
     signDate = json.dumps({"signDate": Date})
@@ -72,7 +94,7 @@ def checkin(cookie):
     else:
         print("❌ 签到失败")
     
-    # 2. 广告任务（基于成功版本的逻辑）
+    # 2. 广告任务
     print("开始广告任务...")
     successful_ads = 0
     
@@ -124,16 +146,36 @@ def process_single_account(username, password):
     """处理单个账号"""
     print(f"\n🔍 正在处理账号: {username}")
     
-    SFCommunity, session_APP = login(username, password)
-    cookie = f".SFCommunity={SFCommunity}; session_APP={session_APP}"
+    # 为每个账号生成独立的设备ID和headers
+    device_token = str(uuid.uuid4()).upper()
+    headers = generate_headers(device_token)
     
-    if check(cookie):
-        coupons = checkin(cookie)
-        print(f"✅ 账号 {username} 处理完成，获得代券: {coupons}")
-        return coupons, True
-    else:
+    SFCommunity, session_APP = login(username, password, device_token, headers)
+    if not SFCommunity or not session_APP:
         print(f"❌ 账号 {username} 登录失败")
         return 0, False
+        
+    cookie = f".SFCommunity={SFCommunity}; session_APP={session_APP}"
+    
+    login_success, nick_name = check(cookie, headers)
+    if not login_success:
+        print(f"❌ 账号 {username} 登录状态检查失败")
+        return 0, False
+        
+    print(f"✅ 用户 {nick_name} 登录成功")
+    
+    # 执行签到和广告任务
+    coupons = checkin(cookie, device_token, headers)
+    
+    # 任务完成后退出账号
+    logout_success = logout(cookie, device_token, headers)
+    
+    if logout_success:
+        print(f"✅ 账号 {username} 处理完成并已安全退出，获得代券: {coupons}")
+    else:
+        print(f"✅ 账号 {username} 处理完成，获得代券: {coupons}")
+    
+    return coupons, True
 
 if __name__ == "__main__":
     print("🚀 SF轻小说多账号自动签到开始执行...")
@@ -147,7 +189,7 @@ if __name__ == "__main__":
     
     # 解析多账号
     users = users_env.split(',')
-    print(f"📋 检测到 {len(users)} 个账号: {', '.join([user.split('|')[0] for user in users])}")
+    print(f"📋 检测到 {len(users)} 个账号")
     
     total_coupons = 0
     successful_accounts = 0
