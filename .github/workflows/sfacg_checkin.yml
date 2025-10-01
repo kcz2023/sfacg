@@ -1,29 +1,27 @@
-name: sfacg check in
+name: SF轻小说签到
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 22 * * *' # 北京时间6点(UTC时间22点)
+  workflow_dispatch:  # 只有手动触发才运行
+  # 移除 schedule 部分，避免定时自动运行
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Set TimeZone to Asia/Shanghai
-        run: |
-          sudo timedatectl set-timezone 'Asia/Shanghai'
-      - name: Checkout repository content
-        uses: actions/checkout@v2 # This GitHub Action checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it
-      - name: Set up Python environment
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-      - name: Run the script
-        run: python sfacg_checkin.py
-        env:
-          username: ${{ secrets.username }}
-          webdav_host: ${{ secrets.webdav_host }}
-          webdav_username: ${{ secrets.webdav_username }}
-          webdav_password: ${{ secrets.webdav_password }}
+    - name: 检查代码
+      uses: actions/checkout@v3
+      
+    - name: 设置Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: 安装依赖
+      run: |
+        pip install requests
+        
+    - name: 执行签到脚本
+      run: python sfacg_checkin.py
+      env:
+        username: ${{ secrets.USERNAME }}
