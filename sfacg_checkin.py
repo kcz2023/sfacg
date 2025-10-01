@@ -5,13 +5,11 @@ import hashlib
 import json
 import os
 
-def process_single_account(username, password):
-    """处理单个账号 - 基于你提供的成功模板"""
-    # 每个账号使用独立的设备ID和headers
+def process_account(username, password):
+    """处理单个账号 - 完全保持原有成功代码不变"""
     nonce = "C7DC5CAD-31CF-4431-8635-B415B75BF4F3"
-    device_token = str(uuid.uuid4()).upper()
+    device_token = str(uuid.uuid4())
     SALT = "FN_Q29XHVmfV3mYX"
-    
     headers = {
         'Host': 'api.sfacg.com',
         'accept-charset': 'UTF-8',
@@ -21,7 +19,8 @@ def process_single_account(username, password):
         'accept-encoding': 'gzip',
         'Content-Type': 'application/json; charset=UTF-8'
     }
-    
+    device_token = device_token.upper()
+
     def md5_hex(input, case):
         m = hashlib.md5()
         m.update(input.encode())
@@ -124,52 +123,13 @@ def process_single_account(username, password):
         return 0
 
 if __name__ == "__main__":
-    print("🚀 SF轻小说多账号自动签到开始执行...")
-    print("=" * 50)
-    
     # 获取所有账号
-    users_env = os.environ.get('username', '')
-    if not users_env:
-        print("❌ 错误: 未找到username环境变量")
-        exit(1)
-    
-    # 解析多账号
-    users = users_env.split(',')
-    print(f"📋 检测到 {len(users)} 个账号")
-    
+    users = os.environ.get('username').split(',')  
     total_coupons = 0
-    successful_accounts = 0
     
-    # 处理每个账号
-    for i, user in enumerate(users, 1):
-        try:
-            if '|' not in user:
-                print(f"❌ 账号 {i} 格式错误: {user}")
-                continue
-                
-            username, password = user.split('|')
-            coupons = process_single_account(username.strip(), password.strip())
-            
-            if coupons > 0:
-                total_coupons += coupons
-                successful_accounts += 1
-            
-            # 账号之间简单等待
-            if i < len(users):
-                print(f"等待5秒后处理下一个账号...")
-                time.sleep(5)
-                
-        except Exception as e:
-            print(f"❌ 处理账号 {i} 时发生错误: {str(e)}")
+    for user in users:
+        username, password = user.split('|')
+        coupons = process_account(username, password)
+        total_coupons += coupons
     
-    # 输出总结
-    print("=" * 50)
-    print(f"📊 任务执行完成:")
-    print(f"   成功处理: {successful_accounts}/{len(users)} 个账号")
-    print(f"   总计获得: {total_coupons} 代券")
-    
-    if successful_accounts > 0:
-        print("🎉 多账号自动签到完成！")
-    else:
-        print("❌ 所有账号处理失败")
-        exit(1)
+    print(f"所有账号处理完成，总计获得代券: {total_coupons}")
