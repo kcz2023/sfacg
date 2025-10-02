@@ -4,10 +4,9 @@ import uuid
 import hashlib
 import json
 import os
-import random
 
 def process_account(username, password):
-    """处理单个账号 - 保持核心逻辑不变，只添加最小化风险规避"""
+    """处理单个账号 - 完全保持原有成功代码不变"""
     nonce = "C7DC5CAD-31CF-4431-8635-B415B75BF4F3"
     device_token = str(uuid.uuid4())
     SALT = "FN_Q29XHVmfV3mYX"
@@ -41,9 +40,6 @@ def process_account(username, password):
             return False
 
     def login():
-        # 登录前简单延迟
-        time.sleep(random.uniform(2, 4))
-        
         timestamp = int(time.time() * 1000)
         sign = md5_hex(f"{nonce}{timestamp}{device_token}{SALT}", 'Upper')
         headers['sfsecurity'] = f'nonce={nonce}&timestamp={timestamp}&devicetoken={device_token}&sign={sign}'
@@ -78,7 +74,7 @@ def process_account(username, password):
         else:
             print("❌ 签到失败")
         
-        # 2. 广告任务 - 添加轻微随机性
+        # 2. 广告任务
         print("开始广告任务...")
         for i in range(5):
             # 获取广告
@@ -108,8 +104,7 @@ def process_account(username, password):
             else:
                 print(f"❌ 广告任务 {i+1}/5 失败")
             
-            # 轻微随机延迟，1.5-3秒之间
-            time.sleep(random.uniform(1.5, 3))
+            time.sleep(2)  # 等待2秒
         
         print(f"🎉 任务完成，总计获得代券: {total_coupons}")
         return total_coupons
@@ -121,7 +116,7 @@ def process_account(username, password):
     
     if check(cookie):
         coupons = checkin(cookie)
-        print(f"账号 {username} 处理完成，获得代券: {coupon_num}\n")
+        print(f"账号 {username} 处理完成，获得代券: {coupons}\n")
         return coupons
     else:
         print(f"账号 {username} 登录失败\n")
@@ -131,20 +126,10 @@ if __name__ == "__main__":
     # 获取所有账号
     users = os.environ.get('username').split(',')  
     total_coupons = 0
-    account_count = len(users)
     
-    print(f"🚀 开始处理 {account_count} 个账号...")
-    
-    for i, user in enumerate(users, 1):
+    for user in users:
         username, password = user.split('|')
         coupons = process_account(username, password)
         total_coupons += coupons
-        
-        # 账号间延迟 - 随着处理的账号增多，延迟时间也增加
-        if i < account_count:
-            # 第一个账号后延迟5-10秒，第二个后10-15秒，以此类推
-            delay = random.uniform(5 + (i-1)*5, 10 + (i-1)*5)
-            print(f"⏳ 等待 {delay:.1f} 秒后处理下一个账号...")
-            time.sleep(delay)
     
-    print(f"🎉 所有账号处理完成，总计获得代券: {total_coupons}")
+    print(f"所有账号处理完成，总计获得代券: {total_coupons}")
